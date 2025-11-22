@@ -1,67 +1,48 @@
-// const Header = (props) => {
-//   return <h1>{props.course}</h1>
-// }
+import { useState } from 'react'
 
-// Destructured version of Header component, which is equivalent to
-// const course = props.course
-const Header = ({ course }) => {
-  return <h1>{course}</h1>
+const Title = ({text}) => <h1>{text}</h1>
+
+const Button = ({handleClick, text}) => {
+
+  return (
+    <>
+      <button onClick={handleClick}>{text}</button>
+    </>
+  )
 }
 
-const Content = ({parts}) => {
-  console.log(parts)
-  // const list = parts.map(value => <p>{value.name} {value.exercises}</p>)
-  // console.log(list)
-
-  // inline version is more idiomatic ? and because precomputed will require a key for each child element for the <p>
+const Statistics = ({text, number}) => {
   return (
     <div>
-      {parts.map(p => (
-        <p key={p.name}>{p.name} {p.exercises}</p>
-      ))}
-      {/* {list} */}
+      <p> 
+        {text} {number}
+      </p>
     </div>
   )
-};
-
-const Total = ({parts}) => { 
-  let sum = 0
-  parts.forEach(p => {sum += p.exercises || 0})
-
-  return (
-    <div>
-      <p>Number of exercises {sum}</p>
-    </div>
-  )
-    
-};
+}
 
 const App = () => {
-  const course = {
-    name: 'Half Stack application development',
-    parts: [
-      {
-        name: 'Fundamentals of React',
-        exercises: 10
-      },
-      {
-        name: 'Using props to pass data',
-        exercises: 7
-      },
-      {
-        name: 'State of a component',
-        exercises: 14
-      }
-    ]
+  // save clicks of each button to its own state
+  const [good, setGood] = useState(0)
+  const [neutral, setNeutral] = useState(0)
+  const [bad, setBad] = useState(0)
+
+  const clickHandler = (setter, value) => {
+    const func = () => setter(value + 1)
+    return func
   }
+  // This can be simplified to const makeClickHandler = (value, setter) => () => setter(value + 1)
 
   return (
     <div>
-      <Header course={course.name} />
-
-      <Content parts={course.parts}/>
-      <Total parts={course.parts}  />
-      
+      <Title text="give feedback" />
+      <Button handleClick={clickHandler(good, setGood)} text="good" />
+      <Button handleClick={clickHandler(neutral, setNeutral)} text="neutral" />
+      <Button handleClick={clickHandler(bad, setBad)} text="bad" />
+      <Title text="statistics" />
+      <Statistics text="good" number={good} />
+      <Statistics text="neutral" number={neutral} />
+      <Statistics text="bad" number={bad} />
     </div>
   )
 }
