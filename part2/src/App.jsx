@@ -1,55 +1,44 @@
-import Course from './components/Course.jsx'
-const App = () => {
-  const courses = [
-    {
-      name: 'Half Stack application development',
-      id: 1,
-      parts: [
-        {
-          name: 'Fundamentals of React',
-          exercises: 10,
-          id: 1
-        },
-        {
-          name: 'Using props to pass data',
-          exercises: 7,
-          id: 2
-        },
-        {
-          name: 'State of a component',
-          exercises: 14,
-          id: 3
-        },
-        {
-          name: 'Redux',
-          exercises: 11,
-          id: 4
-        }
-      ]
-    }, 
-    {
-      name: 'Node.js',
-      id: 2,
-      parts: [
-        {
-          name: 'Routing',
-          exercises: 3,
-          id: 1
-        },
-        {
-          name: 'Middlewares',
-          exercises: 7,
-          id: 2
-        }
-      ]
-    }
-  ]
+import { useState } from 'react'
 
+const App = () => {
+  const [persons, setPersons] = useState([
+    { name: 'Arto Hellas' }
+  ]) 
+  const [newName, setNewName] = useState('')
+
+  const handleNameChange = (event) => {
+    console.log(event.target.value)
+    setNewName(event.target.value)
+  }
+  const addName = (event) => {
+    event.preventDefault()
+    console.log('button clicked', event.target)
+    if ( persons.some(person => person.name ===newName)){
+      alert(`${newName} is already added to the phonebook`)
+      return
+    }
+
+    const nameObj = {
+      name: newName
+    }
+    setPersons(persons.concat(nameObj))
+    // console.log(persons) this doesn't actually display the new one because it doesn't update automatically
+    setNewName('')
+  }
 
   return (
     <div>
-      {courses.map(c => <Course key={c.id} course={c} />)}
-      {/* <Course course={course}/> */}
+      <h2>Phonebook</h2>
+      <form onSubmit={addName}>
+        <div>
+          name: <input value={newName} onChange={handleNameChange}/>
+        </div>
+        <div>
+          <button type="submit">add</button>
+        </div>
+      </form>
+      <h2>Numbers</h2>
+      ...
     </div>
   )
 }
