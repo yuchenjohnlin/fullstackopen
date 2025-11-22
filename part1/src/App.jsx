@@ -11,7 +11,7 @@ const Button = ({handleClick, text}) => {
   )
 }
 
-const Statistics = ({text, number, unit}) => {
+const StatisticLine = ({text, number, unit}) => {
   return (
     <div>
       <p> 
@@ -32,12 +32,12 @@ const StatBlock = ({good, bad, neutral}) => {
   
   return (
     <div>
-      <Statistics text="good" number={good} />
-      <Statistics text="neutral" number={neutral} />
-      <Statistics text="bad" number={bad} />
-      <Statistics text="all" number={all} />
-      <Statistics text="average" number={(good-bad) / all} />
-      <Statistics text="positive" number={(good / all)*100} unit={'%'}/>
+      <StatisticLine text="good" number={good} />
+      <StatisticLine text="neutral" number={neutral} />
+      <StatisticLine text="bad" number={bad} />
+      <StatisticLine text="all" number={all} />
+      <StatisticLine text="average" number={(good-bad) / all} />
+      <StatisticLine text="positive" number={(good / all)*100} unit={'%'}/>
     </div>
   )
 }
