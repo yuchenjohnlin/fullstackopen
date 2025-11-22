@@ -10,16 +10,14 @@ const Header = ({ course }) => {
 
 const Content = ({parts}) => {
   console.log(parts)
-  // const list = parts.map(value => <p>{value.name} {value.exercises}</p>)
+  const list = parts.map(value => <p key={value.id}>{value.name} {value.exercises}</p>)
   // console.log(list)
-
-  // inline version is more idiomatic ? and because precomputed will require a key for each child element for the <p>
+  
+  // inline version is more idiomatic ? 
+  // because precomputed will require a key for each child element for the <p>
   return (
     <div>
-      {parts.map(p => (
-        <p key={p.name}>{p.name} {p.exercises}</p>
-      ))}
-      {/* {list} */}
+      {list}
     </div>
   )
 };
@@ -30,38 +28,48 @@ const Total = ({parts}) => {
 
   return (
     <div>
-      <p>Number of exercises {sum}</p>
+      <p>total of {sum} exercises</p>
     </div>
   )
     
 };
+const Course = ({course}) => {
+
+  return (
+    <>
+      <Header course={course.name} />
+      <Content parts={course.parts}/>
+      <Total parts={course.parts}  />
+    </>
+  )
+}
 
 const App = () => {
   const course = {
+    id: 1,
     name: 'Half Stack application development',
     parts: [
       {
         name: 'Fundamentals of React',
-        exercises: 10
+        exercises: 10,
+        id: 1
       },
       {
         name: 'Using props to pass data',
-        exercises: 7
+        exercises: 7,
+        id: 2
       },
       {
         name: 'State of a component',
-        exercises: 14
+        exercises: 14,
+        id: 3
       }
     ]
   }
 
   return (
     <div>
-      <Header course={course.name} />
-
-      <Content parts={course.parts}/>
-      <Total parts={course.parts}  />
-      
+      <Course course={course}/>
     </div>
   )
 }
