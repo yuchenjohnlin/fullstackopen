@@ -23,8 +23,11 @@ const Content = ({parts}) => {
 };
 
 const Total = ({parts}) => { 
-  let sum = 0
-  parts.forEach(p => {sum += p.exercises || 0})
+  // let sum = 0
+  // parts.forEach(p => {sum += p.exercises || 0})
+
+  // we don't need return because whatever is after => is automatically returned - implicit return
+  let sum = parts.reduce((sum, part) => sum + part.exercises, 0)
 
   return (
     <div>
