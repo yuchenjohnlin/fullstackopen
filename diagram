@@ -1,0 +1,13 @@
+sequenceDiagram
+    participant User
+    participant Browser
+    participant Server
+
+    User->>Browser: Types a new note and clicks **Save**, which triggers the Browser
+    Note right on the Browser: Browser creates a new note and adds it to the note list.
+    Browser->>User: Renders updated notes list (No reload)
+    
+    Browser->>Server: POST /exampleapp/new_note_spa
+    Note right of Browser: Note content in HTTP POST payload (JSON data with content and date), Content-Type is application/json
+
+    Server->>Browser: HTTP 201 Created

@@ -1,0 +1,25 @@
+sequenceDiagram
+    participant User
+    participant Browser
+    participant Server
+
+    User->>Browser: Types a new note and clicks **Save**, which triggers the Browser
+    Browser->>Server: POST /exampleapp/newnote
+    Note right of Browser: Note content in HTTP POST payload
+
+    Server->>Browser: HTTP 302 Redirect to /exampleapp/notes
+
+    Browser->>Server: GET /exampleapp/notes
+    Server->>Browser: Return HTML page
+
+    Browser->>Server: GET /exampleapp/main.css
+    Server->>Browser: Returns CSS
+
+    Browser->>Server: GET /exampleapp/main.js
+    Server->>Browser: Returns JS
+    Note right of Browser: JS fetches JSON list of notes
+
+    Browser->>Server: GET /exampleapp/data.json
+    Server->>Browser: Returns updated notes JSON
+
+    Browser->>User: Renders updated notes list (including the new note)

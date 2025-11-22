@@ -1,0 +1,32 @@
+sequenceDiagram
+    participant User
+    participant Browser
+    participant Server
+
+    User->>Browser: Clicks on link to https://studies.cs.helsinki.fi/exampleapp/spa
+    
+    Browser->>Server: GET https://studies.cs.helsinki.fi/exampleapp/spa
+    activate Server
+    Server-->>Browser: HTTP 200. payload: HTML document
+    deactivate Server
+
+    Browser->>Server: GET https://studies.cs.helsinki.fi/exampleapp/main.css
+    activate Server
+    Server-->>Browser: HTTP 200. payload: the css file
+    deactivate Server
+
+    Browser->>Server: GET https://studies.cs.helsinki.fi/exampleapp/spa.js
+    activate Server
+    Server-->>Browser: HTTP 200. payload: the JavaScript file
+    deactivate Server
+
+    Note right of Browser: The Browser starts executing the JavaScript code that fetches the JSON from the Server
+
+    Browser->>Server: GET https://studies.cs.helsinki.fi/exampleapp/data.json
+    activate Server
+    Server-->>Browser: HTTP 200. payload: JSON data
+    deactivate Server
+
+    Note right of Browser: The Browser executes the callback function that renders the notes
+
+    Browser->>User: Renders notes list and webpage
