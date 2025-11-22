@@ -11,7 +11,9 @@ const Header = ({ course }) => {
 const Content = (props) => {
   return (
   <div>
-    <p>{props.part} {props.exercise}</p>
+    <p>{props.part1} {props.exercise1}</p>
+    <p>{props.part2} {props.exercise2}</p>
+    <p>{props.part3} {props.exercise3}</p>
   </div>
   )
 };
@@ -33,11 +35,11 @@ const App = () => {
     <div>
       <Header course={course} />
 
-      {/* Cannot have for loops in here, but you can put before the return */}
-      <Content part={part1} exercise={exercises1} />
-      <Content part={part2} exercise={exercises2} />
-      <Content part={part3} exercise={exercises3} />
-
+      <Content 
+        part1={part1} exercise1={exercises1}
+        part2={part2} exercise2={exercises2}
+        part3={part3} exercise3={exercises3}
+      />
       <Total ex1={exercises1} ex2={exercises2} ex3={exercises3} />
       
     </div>
