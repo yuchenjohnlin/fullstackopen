@@ -23,6 +23,13 @@ const Statistics = ({text, number, unit}) => {
 
 const StatBlock = ({good, bad, neutral}) => {
   const all = good + bad + neutral
+  if (all === 0 )
+    return (
+      <div>
+        No feedback given
+      </div>
+    )
+  
   return (
     <div>
       <Statistics text="good" number={good} />
