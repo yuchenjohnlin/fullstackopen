@@ -4,12 +4,16 @@ import PersonForm from './components/PersonForm.jsx'
 import Filter from './components/Filter.jsx'
 import Phonebook from './components/Phonebook.jsx'
 import personService from './services/persons.js'
+import Notification from './components/Notification.jsx'
+import './index.css'
 
 const App = () => {
   const [persons, setPersons] = useState([])
   const [newName, setName] = useState('')
   const [newPhone, setPhone] = useState('')
   const [filterName, setFilterName] = useState('')
+  // react uses null to not render 
+  const [notification, setNotification] = useState({message: null, type: ''})
 
   //Render phase (must be pure) ↓ Commit phase (update DOM) ↓ Effect phase (run useEffects)
   // Well useEffect is to not have side effects that would interfere with the render process although I can't picture what side effects are
@@ -37,10 +41,14 @@ const App = () => {
       personService
         .del(person.id)
         .then(response => {
-          setPersons(persons.filter(p => p.id !== person.id))        })
-        .catch(error => {
-          console.log("Error:", error)
+          setPersons(persons.filter(p => p.id !== person.id))
         })
+  }
+  const notifyUser = (text, type) => {
+    setNotification({message: text, type: type})
+      setTimeout(() => {
+        setNotification({message: null, type: ''})
+      }, 1500)   // disappear after 3 seconds
   }
 
   const addPerson = (event) => {
@@ -76,7 +84,12 @@ const App = () => {
               p.id !== existing.id ? p : response.data
             ))
             console.log(response.data)
+          }).catch(error => {
+            notifyUser(`Information of ${updatedPerson.name} has already been removed from server`, 'error')
+            setPersons(persons.filter(p => p.id !== updatedPerson.id))
           })
+
+        notifyUser(`Updated ${updatedPerson.name}'s phone number to ${updatedPerson.number}`, 'success')
         return
       }
     }    
@@ -98,12 +111,14 @@ const App = () => {
         // because it became a [] 
         setPersons(persons.concat(response.data) )
         console.log(response.data)
+        notifyUser(`Added ${newName}`, "success")
       })
   }
 
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification notification={notification} />
       <Filter filterName={filterName} handleFilterNameChange={inputHandler(setFilterName)}/>
       <h2>add a new</h2>
       <PersonForm addName={addPerson} newName={newName} newPhone={newPhone} handleNameChange={inputHandler(setName)} handlePhoneChange={inputHandler(setPhone)} />
