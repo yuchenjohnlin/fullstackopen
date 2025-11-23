@@ -1,8 +1,9 @@
 import { useState , useEffect} from 'react'
 import axios from 'axios'
-import PersonForm from './PersonForm.jsx'
-import Filter from './Filter.jsx'
-import Phonebook from './Phonebook.jsx'
+import PersonForm from './components/PersonForm.jsx'
+import Filter from './components/Filter.jsx'
+import Phonebook from './components/Phonebook.jsx'
+import personService from './services/persons.js'
 
 const App = () => {
   const [persons, setPersons] = useState([])
@@ -13,8 +14,8 @@ const App = () => {
   //Render phase (must be pure) ↓ Commit phase (update DOM) ↓ Effect phase (run useEffects)
   // Well useEffect is to not have side effects that would interfere with the render process although I can't picture what side effects are
   useEffect( () => {
-    axios
-      .get('http://localhost:3001/persons')      
+    personService
+      .getAll()    
       .then(response => {        
         console.log('promise fulfilled')        
         setPersons(response.data)      
@@ -31,20 +32,54 @@ const App = () => {
     // }
   }
 
-  const addName = (event) => {
+  const deletePerson = (person) => {
+    if(window.confirm(`Delete ${person.name} ?`))
+      personService
+        .del(person.id)
+        .then(response => {
+          setPersons(persons.filter(p => p.id !== person.id))        })
+        .catch(error => {
+          console.log("Error:", error)
+        })
+  }
+
+  const addPerson = (event) => {
     // need to handle new id
     event.preventDefault()
-    console.log('button clicked', event.target)
-    if ( persons.some(person => person.name ===newName)){
-      alert(`${newName} is already added to the phonebook`)
-      return
-    }
 
     const nameObj = {
       name: newName,
       number: newPhone,
-      id: persons.length > 0 ? Math.max(...persons.map(p => p.id)) + 1 : 1
+      // let server add the id
+      // id: String (persons.length > 0 ? Math.max(...persons.map(p => p.id)) + 1 : 1 )
     }
+
+    // if ( persons.some(person => person.name ===newName)){ some returns true false
+    const existing = persons.find(p => p.name === newName)
+    if( existing ){
+      const confirm = window.confirm(`${newName} is already added to the phonebook - Replace the old number with the new one ?`)
+      if(!confirm){
+        return
+      }
+      else{
+        // use put to update the phonenumber 
+        const updatedPerson = {
+          ...existing,
+          number: newPhone
+        }
+        personService
+          .update(existing.id, updatedPerson) // can't use nameObj here because the serverrecognizes that they are different so won't overwrite
+          // I would have to wait for the response to get it (mostly because the id issue but here we actually defined the ids ourselves)
+          .then(response => {
+            // update via server not just the input user gave
+            setPersons(persons.map(p =>
+              p.id !== existing.id ? p : response.data
+            ))
+            console.log(response.data)
+          })
+        return
+      }
+    }    
     // setPersons(persons.concat(nameObj))
     console.log(persons) // this doesn't actually display the new one because it doesn't update automatically
     setName('')
@@ -56,8 +91,8 @@ const App = () => {
     // it is because I copied that above in to this function, thinking that it might need it 
     // but hooks are for side Effects that should run because of rendering Not because of clicking a button 
     // Effects = things that reach outside of the React world:
-    axios
-      .post('http://localhost:3001/persons', nameObj)
+    personService
+      .create(nameObj)
       // I would have to wait for the response to get it (mostly because the id issue but here we actually defined the ids ourselves)
       .then(response => {
         // because it became a [] 
@@ -71,9 +106,9 @@ const App = () => {
       <h2>Phonebook</h2>
       <Filter filterName={filterName} handleFilterNameChange={inputHandler(setFilterName)}/>
       <h2>add a new</h2>
-      <PersonForm addName={addName} newName={newName} newPhone={newPhone} handleNameChange={inputHandler(setName)} handlePhoneChange={inputHandler(setPhone)} />
+      <PersonForm addName={addPerson} newName={newName} newPhone={newPhone} handleNameChange={inputHandler(setName)} handlePhoneChange={inputHandler(setPhone)} />
       <h2>Numbers</h2>
-      <Phonebook persons={persons} filter={filterName} />
+      <Phonebook persons={persons} filter={filterName} deletePerson={deletePerson}/>
     </div>
   )
 }
