@@ -83,13 +83,21 @@ const App = () => {
             setPersons(persons.map(p =>
               p.id !== existing.id ? p : response.data
             ))
-            console.log(response.data)
+            // console.log(response.data)
+            // This seemse to be the right place to put this log
+            // but you would get a result of flashing this success because the backend might not delete the info that fast
+            // where put has already finished and returned a success. 
+            // So why was put finished earlier even if delete was triggered before that maybe delete operation is a lot longer than put
+            // 
+            notifyUser(`Updated ${updatedPerson.name}'s phone number to ${updatedPerson.number}`, 'success')
           }).catch(error => {
-            notifyUser(`Information of ${updatedPerson.name} has already been removed from server`, 'error')
-            setPersons(persons.filter(p => p.id !== updatedPerson.id))
+            const message = error.response?.data?.error || `Information of ${updatedPerson.name} has already been removed from server`
+            notifyUser(message, 'error')
+            if (!error.response || error.response.status === 404) {
+              setPersons(persons.filter(p => p.id !== updatedPerson.id))
+            }
           })
-
-        notifyUser(`Updated ${updatedPerson.name}'s phone number to ${updatedPerson.number}`, 'success')
+        // notifyUser(`Updated ${updatedPerson.name}'s phone number to ${updatedPerson.number}`, 'success')
         return
       }
     }    
@@ -115,7 +123,7 @@ const App = () => {
       })
       .catch(error => {
         console.log(error.response?.data?.error )
-        const message = error.response?.data?.error || `Person validation failed: Path \`name\`(\`${newName}\`) is shorter than the minimum allowed length(3)`
+        const message = error.response?.data?.error || 'Failed to add person'
         notifyUser(message, 'error') // - optional chaining
       })
   }
