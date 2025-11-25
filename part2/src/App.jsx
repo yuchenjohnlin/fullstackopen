@@ -113,6 +113,11 @@ const App = () => {
         console.log(response.data)
         notifyUser(`Added ${newName}`, "success")
       })
+      .catch(error => {
+        console.log(error.response?.data?.error )
+        const message = error.response?.data?.error || `Person validation failed: Path \`name\`(\`${newName}\`) is shorter than the minimum allowed length(3)`
+        notifyUser(message, 'error') // - optional chaining
+      })
   }
 
   return (
