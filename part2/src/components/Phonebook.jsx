@@ -1,6 +1,6 @@
 const Phonebook = ({persons, filter, deletePerson}) => {
     // if a person doesn't have a name (not inputed) then it cannopt do lowercase and will return error
-  const filterPersons = persons.filter(p => p.name && p.name.toLowerCase().startsWith(filter) )
+  const filterPersons = persons.filter(p => p.name && p.name.toLowerCase().startsWith(filter.toLowerCase()) )
 
   const list = filterPersons.map(
     person => 
