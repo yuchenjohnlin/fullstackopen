@@ -14,7 +14,7 @@ app.use(morgan('tiny'))
 
 // don't need to add input for the password because we put it in the .env file
 
-// --------- routes --------- 
+// --------- routes ---------
 
 app.get('/api/persons', (request, response, next) => {
   Person.find({})
