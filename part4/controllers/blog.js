@@ -1,40 +1,88 @@
 const blogsRouter = require('express').Router()
 const Blog = require('../models/blogSchema')
 
-// blogsRouter.get('/', (request, response) => {
-//   Blog.find({}).then((blogs) => {
-//     response.json(blogs)
-//   })
-// })
-
-blogsRouter.get('/', async(request, response) => {
+blogsRouter.get('/', async (request, response, next) => {
+  try {
     const blogs = await Blog.find({})
     response.json(blogs)
+  } catch (error) {
+    next(error)
+  }
 })
 
-// because we use app.use('/api/blogs) so don't need to include it in url
-// blogsRouter.post('/api/blogs', (request, response) => {
-// blogsRouter.post('/', (request, response) => {
-//   const blog = new Blog(request.body)
+blogsRouter.get('/:id', async (request, response, next) => {
+  try {
+    const { id } = request.params
+    const blog = await Blog.findById(id)
+    if (!blog) {
+      return response.status(404).end()
+    }
+    response.json(blog)
+  } catch (error) {
+    next(error)
+  }
+})
 
-//   blog.save().then((result) => {
-//     response.status(201).json(result)
-//   })
-// })
+blogsRouter.post('/', async (request, response, next) => {
+  try {
+    const { title, author, url, likes } = request.body
+    if (!title || !url) {
+      return response.status(400).json({ error: 'title and url required' })
+    }
 
-blogsRouter.post('/', async (request, response) => {
-    if (!request.body.title || !request.body.url)
-        response.status(400).json({ error: 'title and url required' })
+    const blog = new Blog({
+      title,
+      author,
+      url,
+      likes: likes === undefined ? 0 : likes,
+    })
 
-    // seems like it is not recommended to change the user input directly
-    if(!request.body.likes)
-        request.body.likes = 0 
-    // request.body.likes = request.body.like || 0
+    const saved = await blog.save()
+    response.status(201).json(saved)
+  } catch (error) {
+    next(error)
+  }
+})
 
-    const blog = new Blog(request.body)
-    result = await blog.save()
-    
-    response.status(201).json(result)
+blogsRouter.put('/:id', async (request, response, next) => {
+  try {
+    const { id } = request.params
+    const { title, author, url, likes } = request.body
+
+    if (!title || !url) {
+      return response.status(400).json({ error: 'title and url required' })
+    }
+
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      id,
+      { title, author, url, likes: likes === undefined ? 0 : likes },
+      { new: true, runValidators: true }
+    )
+
+    if (!updatedBlog) {
+      return response.status(404).json({ error: 'blog not found' })
+    }
+
+    response.json(updatedBlog)
+  } catch (error) {
+    next(error)
+  }
+})
+
+blogsRouter.delete('/:id', async (request, response, next) => {
+  try {
+    const { id } = request.params
+
+    const blog = await Blog.findById(id)
+    if (!blog) {
+      return response.status(404).json({ error: 'blog not found' })
+    }
+
+    await Blog.findByIdAndDelete(id)
+    return response.status(204).end()
+  } catch (error) {
+    next(error)
+  }
 })
 
 module.exports = blogsRouter
