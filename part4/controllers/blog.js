@@ -17,7 +17,7 @@ blogsRouter.get('/', async(request, response) => {
 })
 
 blogsRouter.get('/:id', async (request, response) => {
-    const blog = await Blog.findById(id)
+    const blog = await Blog.findById(request.params.id).populate('user', {username: 1, name: 1})
     if (!blog) {
         return response.status(404).end()
     }
@@ -71,6 +71,11 @@ blogsRouter.put('/:id', async (request, response) => {
     const user = request.user
     const {id} = request.params
     let body = request.body
+
+    const blog = await Blog.findById(id)
+    if (blog.user.toString() !== request.user.id) {
+        return response.status(403).json({ error: 'unauthorized' })
+    }
     
     if (!body.title || !body.url)
         return response.status(400).json({ error: 'title and url required' })
@@ -94,12 +99,11 @@ blogsRouter.put('/:id', async (request, response) => {
 blogsRouter.delete('/:id', async (request, response) => {
     const { id } = request.params
 
+    const blog = await Blog.findById(id)
     if (blog.user.toString() !== request.user.id) {
         return response.status(403).json({ error: 'unauthorized' })
     }
 
-
-    const blog = await Blog.findById(id)
     if (!blog) {
         return response.status(404).json({ error: 'blog not found' })
     }
