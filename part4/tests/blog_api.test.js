@@ -3,64 +3,31 @@ const assert = require('node:assert')
 const mongoose = require('mongoose')
 const supertest = require('supertest')
 const Blog = require('../models/blogSchema')
+const User = require('../models/userSchema')
+const bcrypt = require('bcrypt')
 
 const app = require('../app')
 const api = supertest(app)
+const helper = require('./test_helper')
 
-const initialBlogs = [
-  {
-      _id: "5a422a851b54a676234d17f7",
-      title: "React patterns",
-      author: "Michael Chan",
-      url: "https://reactpatterns.com/",
-      likes: 7,
-      __v: 0
-    },
-    {
-      _id: "5a422aa71b54a676234d17f8",
-      title: "Go To Statement Considered Harmful",
-      author: "Edsger W. Dijkstra",
-      url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
-      likes: 5,
-      __v: 0
-    },
-    {
-      _id: "5a422b3a1b54a676234d17f9",
-      title: "Canonical string reduction",
-      author: "Edsger W. Dijkstra",
-      url: "http://www.cs.utexas.edu/~EWD/transcriptions/EWD08xx/EWD808.html",
-      likes: 12,
-      __v: 0
-    },
-    {
-      _id: "5a422b891b54a676234d17fa",
-      title: "First class tests",
-      author: "Robert C. Martin",
-      url: "http://blog.cleancoder.com/uncle-bob/2017/05/05/TestDefinitions.htmll",
-      likes: 10,
-      __v: 0
-    },
-    {
-      _id: "5a422ba71b54a676234d17fb",
-      title: "TDD harms architecture",
-      author: "Robert C. Martin",
-      url: "http://blog.cleancoder.com/uncle-bob/2017/03/03/TDD-Harms-Architecture.html",
-      likes: 0,
-      __v: 0
-    },
-    {
-      _id: "5a422bc61b54a676234d17fc",
-      title: "Type wars",
-      author: "Robert C. Martin",
-      url: "http://blog.cleancoder.com/uncle-bob/2016/05/01/TypeWars.html",
-      likes: 2,
-      __v: 0
-    }  
-]
+let authHeader = ''
 
-beforeEach(async() => {
+beforeEach(async () => {
   await Blog.deleteMany({})
-  await Blog.insertMany(initialBlogs)
+  await User.deleteMany({})
+
+  const passwordHash = await bcrypt.hash('sekret', 10)
+  const user = new User({ username: 'root', name: 'Root User', passwordHash })
+  const savedUser = await user.save()
+
+  const blogsWithUser = helper.initialBlogs.map(b => ({ ...b, user: savedUser._id }))
+  await Blog.insertMany(blogsWithUser)
+
+  const loginRes = await api
+    .post('/api/login')
+    .send({ username: 'root', password: 'sekret' })
+
+  authHeader = `Bearer ${loginRes.body.token}`
 })
 
 
@@ -72,7 +39,7 @@ describe('when there are initially some blogs saved', () => {
       .expect(200)
       .expect('Content-Type', /application\/json/)
 
-    assert.strictEqual(res.body.length, initialBlogs.length)
+    assert.strictEqual(res.body.length, helper.initialBlogs.length)
   })
 
   test('unique identifier property is id', async () => {
@@ -94,13 +61,14 @@ describe('when there are initially some blogs saved', () => {
     await api
       .post('/api/blogs')
       .send(newBlog)
+      .set('Authorization', authHeader)
       .expect(201)
       .expect('Content-Type', /application\/json/)
 
     const response = await api.get('/api/blogs')
     const titles = response.body.map(r => r.title)
     
-    assert.strictEqual(response.body.length, initialBlogs.length + 1)
+    assert.strictEqual(response.body.length, helper.initialBlogs.length + 1)
     assert(titles.includes('Love Kuang Yun'))
   })
 
@@ -114,6 +82,7 @@ describe('when there are initially some blogs saved', () => {
     const response = await api
       .post('/api/blogs')
       .send(newBlog)
+      .set('Authorization', authHeader)
       .expect(201)
       .expect('Content-Type', /application\/json/)
 
@@ -130,10 +99,28 @@ describe('when there are initially some blogs saved', () => {
     const response = await api
       .post('/api/blogs')
       .send(newBlog)
+      .set('Authorization', authHeader)
       .expect(400)
       .expect('Content-Type', /application\/json/)
 
     assert.strictEqual(response.status, 400)
+  })
+
+  test('adding a blog fails with 401 if token missing', async () => {
+    const newBlog = {
+      title: 'No token blog',
+      author: 'Test Author',
+      url: 'http://example.com/no-token',
+      likes: 1
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(401)
+
+    const blogsAtEnd = await helper.blogsInDb()
+    assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length)
   })
 
 describe('deletion of a blog', () => {
@@ -141,16 +128,32 @@ describe('deletion of a blog', () => {
       const start = await Blog.find({})
       const blogToDelete = start[0]
 
-      await api.delete(`/api/blogs/${blogToDelete.id}`).expect(204)
+      await api
+        .delete(`/api/blogs/${blogToDelete.id}`)
+        .set('Authorization', authHeader)
+        .expect(204)
 
       const end = await Blog.find({})
-      assert.strictEqual(end.length, initialBlogs.length - 1)
+      assert.strictEqual(end.length, helper.initialBlogs.length - 1)
       const titles = end.map(b => b.title)
       assert(!titles.includes(blogToDelete.title))
     })
-})
 
-describe('updating a blog', () => {
+    test('fails with status 401 if token is invalid', async () => {
+      const start = await Blog.find({})
+      const blogToDelete = start[0]
+
+      await api
+        .delete(`/api/blogs/${blogToDelete.id}`)
+        .set('Authorization', 'Bearer invalidtoken')
+        .expect(401)
+
+      const end = await Blog.find({})
+      assert.strictEqual(end.length, helper.initialBlogs.length)
+    })
+  })
+
+  describe('updating a blog', () => {
     test('succeeds in updating likes with valid id', async () => {
       const start = await Blog.find({})
       const blogToUpdate = start[0]
@@ -160,6 +163,7 @@ describe('updating a blog', () => {
       const res = await api
         .put(`/api/blogs/${blogToUpdate.id}`)
         .send(updatedFields)
+        .set('Authorization', authHeader)
         .expect(200)
         .expect('Content-Type', /application\/json/)
 
