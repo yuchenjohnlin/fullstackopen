@@ -12,26 +12,25 @@ const App = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
-  // const [errorMessage, setErrorMessage] = useState(null);
-  const [notification, setNotification] = useState({message: null, type: ''})
+  const [notification, setNotification] = useState({ message: null, type: '' })
   // the reason notification is null is if it is '' then the block will appear
-  
+
   const blogFormRef = useRef()
   const LoginFormRef = useRef()
 
   const notifyUser = (text, type) => {
-    setNotification({message: text, type: type})
-      setTimeout(() => {
-        setNotification({message: null, type: ''})
-      }, 5000)   // disappear after 3 seconds
+    setNotification({ message: text, type: type })
+    setTimeout(() => {
+      setNotification({ message: null, type: '' })
+    }, 5000)   // disappear after 3 seconds
   }
 
   useEffect(() => {
-    if(!user) return;
+    if (!user) return
 
     blogService.getAll().then(blogs =>
-      setBlogs( [...blogs].sort((a, b) => b.likes - a.likes) )
-    )  
+      setBlogs([...blogs].sort((a, b) => b.likes - a.likes))
+    )
   }, [user])
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
@@ -52,8 +51,8 @@ const App = () => {
       blogService.setToken(user.token)
       window.localStorage.setItem(
         'loggedBlogappUser', JSON.stringify(user)
-      ) 
-      
+      )
+
       notifyUser(`${user.name} is successfully logged in !`, 'success')
 
       setUser(user)
@@ -106,9 +105,9 @@ const App = () => {
   }
 
   const handleLogout = () => {
-    window.localStorage.removeItem('loggedBlogappUser'); // clear stored user/token
-    blogService.setToken(null); // drop Authorization header
-    setUser(null);
+    window.localStorage.removeItem('loggedBlogappUser') // clear stored user/token
+    blogService.setToken(null) // drop Authorization header
+    setUser(null)
     notifyUser(`${user.name} is successfully logged out !`, 'success')
   }
   const logoutForm = () => (
@@ -140,9 +139,9 @@ const App = () => {
   return (
     <div>
       {/* {errorMessage && <div>{errorMessage}</div>} */}
-      <Notification notification={notification}/>
+      <Notification notification={notification} />
       {!user && loginForm()}
-      
+
       {user && logoutForm()}
       <BlogList
         blogs={[...blogs].sort((a, b) => b.likes - a.likes)}
