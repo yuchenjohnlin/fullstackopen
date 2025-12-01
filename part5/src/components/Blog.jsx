@@ -15,12 +15,12 @@ const Blog = ({ blog, onLike, onDelete, currentUser }) => {
   const canRemove = blog.user && currentUser && blog.user.username === currentUser.username
 
   return (
-    <div style={blogStyle}>
-      <div>
+    <div style={blogStyle} className="blog">
+      <div className="blog-summary">
         {blog.title} {blog.author} <button onClick={() => setShowDetails(!showDetails)}>{toggleLabel}</button>
       </div>
       {showDetails && (
-        <div>
+        <div className="blog-details">
           <div>{blog.url}</div>
           <div>
             likes {blog.likes} <button onClick={() => onLike(blog)}>like</button>

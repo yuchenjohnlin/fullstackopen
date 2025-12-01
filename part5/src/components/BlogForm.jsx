@@ -24,7 +24,7 @@ const BlogForm = ({ createBlog }) => {
   return (
     <>
       <h2>create new</h2>
-      <form onSubmit={addBlog}>
+      <form onSubmit={addBlog} role="form">
         <input name="title" value={newBlog.title} onChange={handleBlogChange} placeholder="title" />
         <input name="author" value={newBlog.author} onChange={handleBlogChange} placeholder="author" />
         <input name="url" value={newBlog.url} onChange={handleBlogChange} placeholder="url" />
