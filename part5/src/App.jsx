@@ -7,7 +7,6 @@ import BlogForm from './components/BlogForm.jsx'
 import BlogList from './components/BlogList.jsx'
 import Togglable from './components/Togglable.jsx'
 
-
 const App = () => {
   const [blogs, setBlogs] = useState([])
   const [username, setUsername] = useState('')
@@ -31,7 +30,7 @@ const App = () => {
     if(!user) return;
 
     blogService.getAll().then(blogs =>
-      setBlogs( blogs )
+      setBlogs( [...blogs].sort((a, b) => b.likes - a.likes) )
     )  
   }, [user])
   useEffect(() => {
@@ -66,12 +65,45 @@ const App = () => {
   }
   const addBlog = (blogObject) => {
     blogService
-        .create(blogObject)
-        .then(returnedBlog => {
-        setBlogs(blogs.concat(returnedBlog))
+      .create(blogObject)
+      .then(returnedBlog => {
+        setBlogs(prev =>
+          prev.concat(returnedBlog).sort((a, b) => b.likes - a.likes)
+        )
+        notifyUser(`a new blog ${returnedBlog.title} by ${returnedBlog.author} added`, 'success')
+        blogFormRef.current?.toggleVisibility()
+      })
+      .catch(() => {
+        notifyUser('failed to add blog', 'error')
       })
   }
-    
+  const handleLike = (blog) => {
+    const userId = blog.user?.id || blog.user?._id || blog.user
+    const updated = { ...blog, likes: blog.likes + 1, user: userId }
+    blogService
+      .update(blog.id, updated)
+      .then(returnedBlog => {
+        setBlogs(prev =>
+          prev
+            .map(b => (b.id === blog.id ? { ...returnedBlog, user: blog.user } : b))
+            .sort((a, b) => b.likes - a.likes)
+        )
+      })
+      .catch(() => notifyUser('failed to like blog', 'error'))
+  }
+
+  const handleDelete = (blog) => {
+    const confirmDelete = window.confirm(`Remove blog ${blog.title} by ${blog.author}?`)
+    if (!confirmDelete) return
+
+    blogService
+      .remove(blog.id)
+      .then(() => {
+        setBlogs(prev => prev.filter(b => b.id !== blog.id))
+        notifyUser(`removed ${blog.title}`, 'success')
+      })
+      .catch(() => notifyUser('failed to remove blog', 'error'))
+  }
 
   const handleLogout = () => {
     window.localStorage.removeItem('loggedBlogappUser'); // clear stored user/token
@@ -101,7 +133,6 @@ const App = () => {
     <Togglable buttonLabel='new blog' ref={blogFormRef}>
       <BlogForm
         createBlog={addBlog}
-        notifyUser={notifyUser}
       />
     </Togglable>
   )
@@ -114,7 +145,10 @@ const App = () => {
       
       {user && logoutForm()}
       <BlogList
-        blogs={blogs}
+        blogs={[...blogs].sort((a, b) => b.likes - a.likes)}
+        onLike={handleLike}
+        onDelete={handleDelete}
+        currentUser={user}
       />
       {user && blogForm()}
     </div>

@@ -5,6 +5,7 @@ import Filter from './components/Filter.jsx'
 import Phonebook from './components/Phonebook.jsx'
 import personService from './services/persons.js'
 import Notification from './components/Notification.jsx'
+import Toggable from './components/Toggable.jsx'
 import './index.css'
 
 const App = () => {

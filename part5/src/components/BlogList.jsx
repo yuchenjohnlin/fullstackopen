@@ -1,28 +1,20 @@
 import Blog from './Blog'
 
-const BlogList = ({
-    blogs
-}) => {
-    return (
+const BlogList = ({ blogs, onLike, onDelete, currentUser }) => {
+  return (
     <>
-        <h2>blogs</h2>
-        <table>
-            <thead>
-            <tr>
-                <th>Title</th>
-                <th>Author</th>
-                <th>URL</th>
-                <th>Likes</th>
-            </tr>
-            </thead>
-            <tbody>
-            {blogs.map(blog =>
-                <Blog key={blog.id} blog={blog} />
-            )}
-            </tbody>
-        </table>
+      <h2>blogs</h2>
+      {blogs.map(blog =>
+        <Blog
+          key={blog.id}
+          blog={blog}
+          onLike={onLike}
+          onDelete={onDelete}
+          currentUser={currentUser}
+        />
+      )}
     </>
-    )
+  )
 }
 
 export default BlogList
