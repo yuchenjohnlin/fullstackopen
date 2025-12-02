@@ -1,17 +1,20 @@
+import { useNotificationValue } from '../NotificationContext.jsx'
+
 const Notification = () => {
+  const notification = useNotificationValue()
+
+  if (!notification) return null
+
   const style = {
     border: 'solid',
     padding: 10,
     borderWidth: 1,
     marginBottom: 5
   }
-  
-  // placeholder; extend to use React Query or context later
-  if (true) return null
 
   return (
     <div style={style}>
-      
+      {notification}
     </div>
   )
 }
