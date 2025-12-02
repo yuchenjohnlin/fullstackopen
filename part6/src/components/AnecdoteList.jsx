@@ -1,32 +1,44 @@
 import { useDispatch, useSelector } from 'react-redux'
-import {  voteAnecdote } from '../reducers/anecdoteReducer'
+import { voteAnecdote } from '../reducers/anecdoteReducer'
+import { showNotification } from '../reducers/notificationReducer'
 
 const AnecdoteList = () => {
-    const state = useSelector(state => state)
-    // return state.anecdotes.filter(a => a.content.toLowerCase().includes(state.filter.toLowerCase()))
-    // this is not a good approach because it returns a new state
+  const anecdotes = useSelector(state => state.anecdotes)
+  const filter = useSelector(state => state.filter)
 
-    const filtered = state.anecdotes.filter(a => a.content.toLowerCase().includes(state.filter.toLowerCase()))
-    // so this way there are errros, but I think this is how OFS teached
-    const dispatch = useDispatch()
+  const filtered = filter === ''
+    ? anecdotes
+    : anecdotes.filter(a => a.content.toLowerCase().includes(filter.toLowerCase()))
 
-    const vote = id => {
-        dispatch(voteAnecdote(id))
-    }
+  const dispatch = useDispatch()
 
-    return (
-        <>
-        {filtered.map(anecdote => (
-            <div key={anecdote.id}>
-            <div>{anecdote.content}</div>
-            <div>
-                has {anecdote.votes}
-                <button onClick={() => vote(anecdote.id)}>vote</button>
-            </div>
-            </div>
-        ))}
-        </>
-    )
+  const vote = id => {
+      // 1. FIND the specific anecdote BEFORE dispatching the vote
+      const anecdoteToVote = anecdotes.find(a => a.id === id);
+
+      // 2. Dispatch the vote (data manipulation)
+      dispatch(voteAnecdote(id));
+
+      // 3. Dispatch the notification (UI feedback)
+      // Use the content from the specific anecdoteToVote object
+      if (anecdoteToVote) {
+        dispatch(showNotification(`You voted '${anecdoteToVote.content}'`, 5));
+      }
+  }
+
+  return (
+    <>
+      {filtered.map(anecdote => (
+        <div key={anecdote.id}>
+          <div>{anecdote.content}</div>
+          <div>
+            has {anecdote.votes}
+            <button onClick={() => vote(anecdote.id)}>vote</button>
+          </div>
+        </div>
+      ))}
+    </>
+  )
 }
 
 export default AnecdoteList

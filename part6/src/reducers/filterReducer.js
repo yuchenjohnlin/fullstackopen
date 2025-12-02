@@ -1,21 +1,17 @@
+import {createSlice} from '@reduxjs/toolkit'
+
 // basically we have to add a reducer that does some action according to the action but now we want to change the state of the filter
-export const inputFilter = filter => {
-    return {
-        type: 'INPUT_FILTER',
-        payload: {filter}
-    }
-}
 
-const filterReducer = (state = '', action) => {
-    // why does the reducer have to return something
-    console.log('state now: ', state)
-    console.log('action', action)
-    switch (action.type) {
-        case 'INPUT_FILTER':
-            return action.payload.filter
-        default:
-            return state
+const filterSlice = createSlice({
+    name: 'filter',
+    initialState: '',
+    reducers: {
+        inputFilter(state, action){
+            // I have to mutate or return a new value
+            return action.payload
+        }
     }
-}
+})
 
-export default filterReducer
+export const { inputFilter } = filterSlice.actions
+export default filterSlice.reducer
