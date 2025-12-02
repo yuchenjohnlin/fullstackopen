@@ -35,4 +35,18 @@ const createNew = async(content) => {
     return await response.json()
 }
 
-export default { getAll, createNew}
+const updateVote = async( anecdoteToVote ) => {
+    const options = {
+        method: 'PUT',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({...anecdoteToVote, votes: anecdoteToVote.votes + 1}) // need serialize, from memory object to json strings
+    }
+    console.log(options)
+    const response = await fetch(`${baseUrl}/${anecdoteToVote.id}`, options)
+    if (!response.ok) {
+        throw new error('Failed to update vote')
+    }
+    return await response.json()
+}
+
+export default { getAll, createNew, updateVote }

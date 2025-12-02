@@ -12,18 +12,9 @@ const AnecdoteList = () => {
 
   const dispatch = useDispatch()
 
-  const vote = id => {
-      // 1. FIND the specific anecdote BEFORE dispatching the vote
-      const anecdoteToVote = anecdotes.find(a => a.id === id);
-
-      // 2. Dispatch the vote (data manipulation)
-      dispatch(voteAnecdote(id));
-
-      // 3. Dispatch the notification (UI feedback)
-      // Use the content from the specific anecdoteToVote object
-      if (anecdoteToVote) {
-        dispatch(showNotification(`You voted '${anecdoteToVote.content}'`, 5));
-      }
+  const vote = anecdote => {
+      dispatch(voteAnecdote(anecdote))
+      dispatch(showNotification(`You voted '${anecdote.content}'`, 5));
   }
 
   return (
@@ -33,7 +24,7 @@ const AnecdoteList = () => {
           <div>{anecdote.content}</div>
           <div>
             has {anecdote.votes}
-            <button onClick={() => vote(anecdote.id)}>vote</button>
+            <button onClick={() => vote(anecdote)}>vote</button>
           </div>
         </div>
       ))}
