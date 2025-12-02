@@ -8,9 +8,9 @@ const AnecdoteForm = () => {
     const addAnecdote = async (event) => {
         event.preventDefault()
         const content = event.target.anecdote.value
-        event.target.anecdote.value = ''
         // set the anecdote
         dispatch(appendAnecdote(event.target.anecdote.value))
+        event.target.anecdote.value = ''
     }
     return (
     <>
