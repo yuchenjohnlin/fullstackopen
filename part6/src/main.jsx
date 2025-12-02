@@ -1,28 +1,14 @@
 import ReactDOM from 'react-dom/client'
 import { createStore } from 'redux'
-import counterReducer from './reducers/counterReducer'
+import { Provider } from 'react-redux'
 
-const store = createStore(counterReducer)
+import App from './App'
+import reducer from './reducers/anecdoteReducer'
 
-const App = () => {
-  return (
-    <div>
-      <button onClick={() => store.dispatch({ type: 'GOOD' })}>good</button>
-      <button onClick={() => store.dispatch({ type: 'OK' })}>ok</button>
-      <button onClick={() => store.dispatch({ type: 'BAD' })}>bad</button>
-      <button onClick={() => store.dispatch({ type: 'RESET' })}>reset stats</button>
-      <div>good {store.getState().good}</div>
-      <div>ok {store.getState().ok}</div>
-      <div>bad {store.getState().bad}</div>
-    </div>
-  )
-}
+const store = createStore(reducer)
 
-const root = ReactDOM.createRoot(document.getElementById('root'))
-
-const renderApp = () => {
-  root.render(<App />)
-}
-
-renderApp()
-store.subscribe(renderApp)
+ReactDOM.createRoot(document.getElementById('root')).render(
+  <Provider store={store}>
+    <App />
+  </Provider>
+)
