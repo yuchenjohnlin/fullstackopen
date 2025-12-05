@@ -1,46 +1,49 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
+import { Routes, Route, Link } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import blogService from './services/blogs'
 import loginService from './services/login'
 import Notification from './components/Notification.jsx'
+import { useNotify } from './NotificationContext'
+import { useUserValue, useUserDispatch } from './UserContext'
 import LoginForm from './components/LoginForm.jsx'
 import BlogForm from './components/BlogForm.jsx'
 import BlogList from './components/BlogList.jsx'
+import BlogDetail from './components/BlogDetail.jsx'
+import UserList from './components/UserList.jsx'
 import Togglable from './components/Togglable.jsx'
+import { useUsers } from './hooks/useUsers.js'
+import { useBlogs, useCreateBlog } from './hooks/useBlogs'
+import User from './components/User.jsx'
 
 const App = () => {
-  const [blogs, setBlogs] = useState([])
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [user, setUser] = useState(null)
-  const [notification, setNotification] = useState({ message: null, type: '' })
-  // the reason notification is null is if it is '' then the block will appear
+  const user = useUserValue()
+  const userDispatch = useUserDispatch()
+  console.log(user)
+  const queryClient = useQueryClient()
+
+  const notifyWith = useNotify()
 
   const blogFormRef = useRef()
   const LoginFormRef = useRef()
 
-  const notifyUser = (text, type) => {
-    setNotification({ message: text, type: type })
-    setTimeout(() => {
-      setNotification({ message: null, type: '' })
-    }, 5000) // disappear after 3 seconds
-  }
+  const blogResult = useBlogs({enabled: !!user})
+  const userResult = useUsers()
 
-  useEffect(() => {
-    if (!user) return
+  const blogs = blogResult.data || []
+  const users = userResult.data || []
 
-    blogService.getAll().then((blogs) => setBlogs([...blogs].sort((a, b) => b.likes - a.likes)))
-  }, [user])
+
   useEffect(() => {
     const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON)
-      setUser(user)
+      userDispatch({ type: 'LOGIN', payload: user })
       blogService.setToken(user.token)
     }
   }, [])
 
-  const handleLogin = async (event) => {
-    event.preventDefault()
+  const handleLogin = async ({ username, password }) => {
     console.log('logging in with', username, password)
     try {
       const user = await loginService.login({ username, password })
@@ -48,60 +51,34 @@ const App = () => {
       blogService.setToken(user.token)
       window.localStorage.setItem('loggedBlogappUser', JSON.stringify(user))
 
-      notifyUser(`${user.name} is successfully logged in !`, 'success')
+      notifyWith(`${user.name} is successfully logged in !`, 'success')
 
-      setUser(user)
-      setUsername('')
-      setPassword('')
+      userDispatch({ type: 'LOGIN', payload: user })
     } catch {
-      notifyUser('wrong credentials', 'error')
+      notifyWith('wrong credentials', 'error')
     }
   }
+
+  const newBlogMutation = useCreateBlog(
+    (returnedBlog) => {
+      notifyWith(`a new blog ${returnedBlog.title} by ${returnedBlog.author} added`, 'success')
+      blogFormRef.current?.toggleVisibility()
+    },
+    () => {
+      notifyWith('failed to add blog', 'error')
+    }
+  )
+
   const addBlog = (blogObject) => {
-    blogService
-      .create(blogObject)
-      .then((returnedBlog) => {
-        setBlogs((prev) => prev.concat(returnedBlog).sort((a, b) => b.likes - a.likes))
-        notifyUser(`a new blog ${returnedBlog.title} by ${returnedBlog.author} added`, 'success')
-        blogFormRef.current?.toggleVisibility()
-      })
-      .catch(() => {
-        notifyUser('failed to add blog', 'error')
-      })
-  }
-  const handleLike = (blog) => {
-    const userId = blog.user?.id || blog.user?._id || blog.user
-    const updated = { ...blog, likes: blog.likes + 1, user: userId }
-    blogService
-      .update(blog.id, updated)
-      .then((returnedBlog) => {
-        setBlogs((prev) =>
-          prev
-            .map((b) => (b.id === blog.id ? { ...returnedBlog, user: blog.user } : b))
-            .sort((a, b) => b.likes - a.likes)
-        )
-      })
-      .catch(() => notifyUser('failed to like blog', 'error'))
-  }
-
-  const handleDelete = (blog) => {
-    const confirmDelete = window.confirm(`Remove blog ${blog.title} by ${blog.author}?`)
-    if (!confirmDelete) return
-
-    blogService
-      .remove(blog.id)
-      .then(() => {
-        setBlogs((prev) => prev.filter((b) => b.id !== blog.id))
-        notifyUser(`removed ${blog.title}`, 'success')
-      })
-      .catch(() => notifyUser('failed to remove blog', 'error'))
+    newBlogMutation.mutate(blogObject)
   }
 
   const handleLogout = () => {
     window.localStorage.removeItem('loggedBlogappUser') // clear stored user/token
     blogService.setToken(null) // drop Authorization header
-    setUser(null)
-    notifyUser(`${user.name} is successfully logged out !`, 'success')
+    userDispatch({ type: 'LOGOUT' })
+    notifyWith(`${user.name} is successfully logged out !`, 'success')
+    queryClient.removeQueries({ queryKey: ['blogs'] })
   }
   const logoutForm = () => (
     <div>
@@ -112,13 +89,7 @@ const App = () => {
 
   const loginForm = () => (
     <Togglable buttonLabel="login" ref={LoginFormRef}>
-      <LoginForm
-        username={username}
-        password={password}
-        handleUsernameChange={({ target }) => setUsername(target.value)}
-        handlePasswordChange={({ target }) => setPassword(target.value)}
-        handleSubmit={handleLogin}
-      />
+      <LoginForm onLogin={handleLogin} />
     </Togglable>
   )
   const blogForm = () => (
@@ -128,19 +99,39 @@ const App = () => {
   )
 
   return (
-    <div>
-      {/* {errorMessage && <div>{errorMessage}</div>} */}
-      <Notification notification={notification} />
-      {!user && loginForm()}
+    <div className="app-container">
+      <Notification />
+      <nav className="top-nav">
+        <div className="nav-links">
+          <Link to="/">blogs</Link>
+          <Link to="/users">users</Link>
+        </div>
+        <div className="nav-auth">
+          {user ? (
+            <>
+              <span className="nav-username">{user.name} logged in</span>
+              <button onClick={handleLogout}>logout</button>
+            </>
+          ) : (
+            loginForm()
+          )}
+        </div>
+      </nav>
 
-      {user && logoutForm()}
-      <BlogList
-        blogs={[...blogs].sort((a, b) => b.likes - a.likes)}
-        onLike={handleLike}
-        onDelete={handleDelete}
-        currentUser={user}
-      />
-      {user && blogForm()}
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <>
+              <BlogList blogs={[...blogs].sort((a, b) => b.likes - a.likes)} />
+              {user && blogForm()}
+            </>
+          }
+        />
+        <Route path="/blogs/:id" element={<BlogDetail blogs={blogs} />} />
+        <Route path="/users" element={<UserList users={users} />} />
+        <Route path="/users/:id" element={<User users={users} />} />
+      </Routes>
     </div>
   )
 }

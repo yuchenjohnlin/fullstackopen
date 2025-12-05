@@ -22,9 +22,9 @@ const BlogForm = ({ createBlog }) => {
   }
 
   return (
-    <>
-      <h2>create new</h2>
-      <form onSubmit={addBlog} role="form">
+    <div className="card">
+      <h2 className="section-title">create new</h2>
+      <form onSubmit={addBlog} role="form" className="form-grid">
         <input name="title" value={newBlog.title} onChange={handleBlogChange} placeholder="title" />
         <input
           name="author"
@@ -34,9 +34,11 @@ const BlogForm = ({ createBlog }) => {
         />
         <input name="url" value={newBlog.url} onChange={handleBlogChange} placeholder="url" />
         <input name="likes" value={newBlog.likes} onChange={handleBlogChange} placeholder="likes" />
-        <button type="submit">save</button>
+        <div>
+          <button type="submit">save</button>
+        </div>
       </form>
-    </>
+    </div>
   )
 }
 export default BlogForm

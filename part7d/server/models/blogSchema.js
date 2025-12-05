@@ -5,6 +5,10 @@ const blogSchema = new mongoose.Schema({
   author: String,
   url: String,
   likes: Number,
+  comments: {
+    type: [String],
+    default: [],
+  },
   // this just stores the id of an object
   user: {
     type: mongoose.Schema.Types.ObjectId,

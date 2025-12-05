@@ -33,3 +33,8 @@ You must introduce middleware (like Redux Thunk or Redux Saga) to handle the asy
 
 Usually when you want to call apis, you wouldn't do it directly in the reducer, but redux thunk can create a reducer (kind of like wraping the reducer with another layer  of function) to provide a better code structure
 
+In summary, the Redux Toolkit doesn't change the underlying principles, but it fixes the problem of "too much boilerplate" that historically made Redux difficult and time-consuming to use. It makes Redux much more modern and efficient to write, especially when paired with the useSelector and useDispatch hooks
+
+Then to React Query, a lot of people found out that Redux is an overkill after Query came out because a lot of the states in the store are used to keep track of API data, which could be done by React query.
+
+Only several states are managed by Redux. This led to redux being a overkill where using built in useReducer with context is enough to handle the left states.
